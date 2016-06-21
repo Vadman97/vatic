@@ -5,3 +5,9 @@ backups
 vatic.tar.gz
 .DS_Store
 *.swp
+create_hits.py
+load_hits.py
+setup_videos.py
+tables.py
+gold_standard.txt
+media
