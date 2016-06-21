@@ -282,56 +282,60 @@ function TrackObjectUI(button, container, videoframe, job, player, tracks)
 
 	      // MA
         //var html = "<p>In this video, please track all of these objects:</p>";
+        //^original
 
-      	var num_hints = 8;
-      	var hintidx = Math.floor(Math.random()*num_hints);
-      	var newhint = Math.floor(Math.random()*2);
-      	if (newhint == 1) {
-      	    hintidx = 9
-      	}
       	var html = "<div id='bonus_counter'><p align='center'>Bonus for labeled objects:<br><font color='DarkOrange'>0.00 USD</font></p></div>";
 
-              html += "<p align='center'>Keyboard shortcuts: <font color='blue'>'n'</font> - new vehicle, <font color='blue'>'t'</font> - toggle between partially and fully visible state, <font color='blue'>'d'</font> - delete vehicle.</p><br>";
+        html += "<p align='center'>Keyboard shortcuts: <font color='blue'>'n'</font> - new vehicle, <font color='blue'>'t'</font> - toggle between partially and fully visible state, <font color='blue'>'d'</font> - delete vehicle.</p><br>";
 
-      	if (hintidx == 0) {
-      	    html += "<p align='center'><font color='green'>Hint</font>: label all vehicles with annotation rectangle wider than <strong>20 pixels</strong>. Width is indicated at the top of each annotation:</p><p align='center'><img width = '200px' src='label_cars_instructions/label_small_30px_missing2.png'/></p><p align='center'><img width = '200px' src='label_cars_instructions/label_small_30px_correct2.png'/></p>";
-      	}
-      	else if (hintidx == 1) {
-                  html += "<p align='center'><font color='green'>Hint</font>: labeling boxes should tightly enclose the vehicle:<br><img width = '200px' src='label_cars_instructions/box_precise.png'/><img width = '200px' src='label_cars_instructions/box_loose.png'/></p>";
-      	}
-      	else if (hintidx == 2) {
-      	    html += "<p align='center'><font color='green'>Hint</font>: labeling box for the partially visible vehicle should include the whole vehicle, not just the visible part:<br><img width = '200px' src='label_cars_instructions/occluded_all.png'/><img width = '200px' src='label_cars_instructions/occluded_visible_only.png'/></p>";
-      	}
-      	else if (hintidx == 3) {
-      	    html += "<p align='center'><font color='green'>Hint</font>: you may skip barely visible vehicles at a distance, but you should label all other vehicles:<br><img width = '200px' src='label_cars_instructions/missed_none.png'/><img width = '200px' src='label_cars_instructions/missed_car.png'/></p>";
-      	}
-      	else if (hintidx == 4) {
-      	    html += "<p align='center'><font color='green'>Hint</font>: label all types of vehicles including motorcycles, buses and trucks:<br><img width = '200px' src='label_cars_instructions/type6.jpeg'/><img width = '200px' src='label_cars_instructions/type1.jpeg'/></p>";
-      	}
-      	else if (hintidx == 5) {
-      	    html += "<p align='center'><font color='green'>Hint</font>: When looking at cars from a side angle, label all cars, even if they are traveling in different directions. :<br><img width = '200px' src='label_cars_instructions/side_car1.jpeg'/><img width = '200px' src='label_cars_instructions/side_car2.jpeg'/></p>";
-      	}
-      	else if (hintidx == 6) {
-      	    html += "<p align='center'><font color='green'>Hint</font>: When you are unsure about what should be labeled, please send an email with a screenshot of the image in question to amt@drive.ai. </p>";
-      	}
-      	// else if (hintidx == 7) {
-      	//     html += "<p align='center'><font color='green'>Hint</font>: If you get an image with green boxes already in the image, then only label the missing cars without boxes. </p>";
+        //////THE FOLLOWING LETS YOU ADD RANDOM HINTS TO THE SIDE
+
+      	// var num_hints = 8;
+      	// var hintidx = Math.floor(Math.random()*num_hints);
+      	// var newhint = Math.floor(Math.random()*2);
+      	// if (newhint == 1) {
+      	//     hintidx = 9
       	// }
-      	else if (hintidx == 7) {
-      	    html += "<p align='center'><font color='green'>Hint</font>: Do not label the car that the camera is on. :<br><img width = '200px' src='label_cars_instructions/back_of_car.jpeg'/></p>";
-      	}
-      	// else if (hintidx == 7) {
-      	//     html += "<p align='center'><font color='green'>Hint</font>: Label all cars you see within an image. Do not label a car if you can't see the majority of its hood or its rear tail lights. :<br><img width = '200px' src='label_cars_instructions/all_directions_hint1.jpeg'/><img width = '200px' src='label_cars_instructions/all_directions_hint2.jpeg'/></p>";
+        //
+      	// if (hintidx == 0) {
+      	//     html += "<p align='center'><font color='green'>Hint</font>: label all vehicles with annotation rectangle wider than <strong>20 pixels</strong>. Width is indicated at the top of each annotation:</p><p align='center'><img width = '200px' src='label_cars_instructions/label_small_30px_missing2.png'/></p><p align='center'><img width = '200px' src='label_cars_instructions/label_small_30px_correct2.png'/></p>";
       	// }
-      	else if (hintidx == 8) {
-      	    html += "<p align='center'><font color='green'>Hint</font>: Only label cars in the opposite lane if they are obviously a car. :<br><img width = '300px' src='label_cars_instructions/dark_car.jpeg'/></p>";
-      	}
+      	// else if (hintidx == 1) {
+        //           html += "<p align='center'><font color='green'>Hint</font>: labeling boxes should tightly enclose the vehicle:<br><img width = '200px' src='label_cars_instructions/box_precise.png'/><img width = '200px' src='label_cars_instructions/box_loose.png'/></p>";
+      	// }
+      	// else if (hintidx == 2) {
+      	//     html += "<p align='center'><font color='green'>Hint</font>: labeling box for the partially visible vehicle should include the whole vehicle, not just the visible part:<br><img width = '200px' src='label_cars_instructions/occluded_all.png'/><img width = '200px' src='label_cars_instructions/occluded_visible_only.png'/></p>";
+      	// }
+      	// else if (hintidx == 3) {
+      	//     html += "<p align='center'><font color='green'>Hint</font>: you may skip barely visible vehicles at a distance, but you should label all other vehicles:<br><img width = '200px' src='label_cars_instructions/missed_none.png'/><img width = '200px' src='label_cars_instructions/missed_car.png'/></p>";
+      	// }
+      	// else if (hintidx == 4) {
+      	//     html += "<p align='center'><font color='green'>Hint</font>: label all types of vehicles including motorcycles, buses and trucks:<br><img width = '200px' src='label_cars_instructions/type6.jpeg'/><img width = '200px' src='label_cars_instructions/type1.jpeg'/></p>";
+      	// }
+      	// else if (hintidx == 5) {
+      	//     html += "<p align='center'><font color='green'>Hint</font>: When looking at cars from a side angle, label all cars, even if they are traveling in different directions. :<br><img width = '200px' src='label_cars_instructions/side_car1.jpeg'/><img width = '200px' src='label_cars_instructions/side_car2.jpeg'/></p>";
+      	// }
+      	// else if (hintidx == 6) {
+      	//     html += "<p align='center'><font color='green'>Hint</font>: When you are unsure about what should be labeled, please send an email with a screenshot of the image in question to amt@drive.ai. </p>";
+      	// }
+      	// // else if (hintidx == 7) {
+      	// //     html += "<p align='center'><font color='green'>Hint</font>: If you get an image with green boxes already in the image, then only label the missing cars without boxes. </p>";
+      	// // }
+      	// else if (hintidx == 7) {
+      	//     html += "<p align='center'><font color='green'>Hint</font>: Do not label the car that the camera is on. :<br><img width = '200px' src='label_cars_instructions/back_of_car.jpeg'/></p>";
+      	// }
+      	// // else if (hintidx == 7) {
+      	// //     html += "<p align='center'><font color='green'>Hint</font>: Label all cars you see within an image. Do not label a car if you can't see the majority of its hood or its rear tail lights. :<br><img width = '200px' src='label_cars_instructions/all_directions_hint1.jpeg'/><img width = '200px' src='label_cars_instructions/all_directions_hint2.jpeg'/></p>";
+      	// // }
       	// else if (hintidx == 8) {
-      	//     html += "<p align='center'><font color='green'>Hint</font>: Do not label cars if you can only see the top of the roof, or if they blend in heavily with the background. :<br><img width = '200px' src='label_cars_instructions/dont_label_roof.jpeg'/></p>";
+      	//     html += "<p align='center'><font color='green'>Hint</font>: Only label cars in the opposite lane if they are obviously a car. :<br><img width = '300px' src='label_cars_instructions/dark_car.jpeg'/></p>";
       	// }
-      	else if (hintidx == 9) {
-      	    html += "<p align='center'><font color='green'>Hint</font>: Label ALL vehicles in the image not masked out. Do not label masked out vehicles. :<br><img width = '300px' src='label_cars_instructions/masked_cars.jpeg'/></p>";
-      	}
+      	// // else if (hintidx == 8) {
+      	// //     html += "<p align='center'><font color='green'>Hint</font>: Do not label cars if you can only see the top of the roof, or if they blend in heavily with the background. :<br><img width = '200px' src='label_cars_instructions/dont_label_roof.jpeg'/></p>";
+      	// // }
+      	// else if (hintidx == 9) {
+      	//     html += "<p align='center'><font color='green'>Hint</font>: Label ALL vehicles in the image not masked out. Do not label masked out vehicles. :<br><img width = '300px' src='label_cars_instructions/masked_cars.jpeg'/></p>";
+      	// }
 
 
         //html += "<p>In this image, please label all of these objects:</p>";
