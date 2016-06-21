@@ -12,7 +12,7 @@ function ui_build(job)
     ui_setupslider(player);
     ui_setupsubmit(job, tracks);
     ui_setupclickskip(job, player, tracks, objectui);
-    ui_setupkeyboardshortcuts(job, player, tracks);
+    ui_setupkeyboardshortcuts(job, player);
     ui_loadprevious(job, objectui);
 
     $("#newobjectbutton").click(function() {
@@ -27,17 +27,17 @@ function ui_setup(job)
 {
     var screen = $("<div id='annotatescreen'></div>").appendTo(container);
 
-    $("<table>" +
+    $("<table>" + 
         "<tr>" +
             "<td><div id='instructionsbutton' class='button'>Instructions</div><div id='instructions'>Annotate every object, even stationary and obstructed objects, for the entire video.</td>" +
             "<td><div id='topbar'></div></td>" +
         "</tr>" +
         "<tr>" +
-              "<td><div id='videoframe'></div></td>" +
+              "<td><div id='videoframe'></div></td>" + 
               "<td rowspan='2'><div id='sidebar'></div></td>" +
-          "</tr>" +
+          "</tr>" + 
           "<tr>" +
-              "<td><div id='bottombar'></div></td>" +
+              "<td><div id='bottombar'></div></td>" + 
           "</tr>" +
           "<tr>" +
               "<td><div id='advancedoptions'></div></td>" +
@@ -60,7 +60,6 @@ function ui_setup(job)
     $("#annotatescreen").css("width", (playerwidth + 205) + "px");
 
     $("#bottombar").append("<div id='playerslider'></div>");
-
     $("#bottombar").append("<div class='button' id='rewindbutton'>Rewind</div> ");
     $("#bottombar").append("<div class='button' id='playbutton'>Play</div> ");
 
@@ -120,7 +119,7 @@ function ui_setupbuttons(job, player, tracks)
 {
     $("#instructionsbutton").click(function() {
         player.pause();
-        ui_showinstructions(job);
+        ui_showinstructions(job); 
     }).button({
         icons: {
             primary: "ui-icon-newwin"
@@ -213,7 +212,7 @@ function ui_setupbuttons(job, player, tracks)
     });
 
     $("#annotateoptionsresize").button().click(function() {
-        var resizable = !$(this).attr("checked")
+        var resizable = $(this).attr("checked") ? false : true;
         tracks.resizable(resizable);
 
         if (resizable)
@@ -252,16 +251,12 @@ function ui_setupbuttons(job, player, tracks)
             $(".boundingboxtext").hide();
         }
     });
-
-    // MA
-    $("#playbutton").button("option", "disabled", true);
-
 }
 
-function ui_setupkeyboardshortcuts(job, player, tracks)
+function ui_setupkeyboardshortcuts(job, player)
 {
     $(window).keypress(function(e) {
-        //console.log("Key press: " + e.keyCode);
+        console.log("Key press: " + e.keyCode);
 
         if (ui_disabled)
         {
@@ -271,84 +266,58 @@ function ui_setupkeyboardshortcuts(job, player, tracks)
 
         var keycode = e.keyCode ? e.keyCode : e.which;
         eventlog("keyboard", "Key press: " + keycode);
-	console.log("Key press: " + keycode);
-
-        //if (keycode == 32 || keycode == 112 || keycode == 116 || keycode == 98)
-	if (keycode == 116)
+        
+        if (keycode == 32 || keycode == 112 || keycode == 116 || keycode == 98)
         {
-	    // MA
-            //$("#playbutton").click();
-
-	    // MA: skip labeling occlusion/truncation
-	    if (false) {
-	    //if (tracks.currentid > -1) {
-		var cur_checkbox_state = $("#trackobject" + tracks.currentptr.id + "occluded").attr("checked");
-		// console.log("begin: current state: " + cur_checkbox_state);
-
-		document.getElementById("trackobject" + tracks.currentptr.id + "occluded").checked = !cur_checkbox_state;
-		tracks.currentptr.track.setocclusion(!cur_checkbox_state);
-		tracks.currentptr.track.notifyupdate();
-
-		// cur_checkbox_state = $("#trackobject" + tracks.currentid + "occluded").attr("checked");
-		// console.log("end: current state: " + cur_checkbox_state);
-	    }
-
+            $("#playbutton").click();
+        }
+        if (keycode == 114)
+        {
+            $("#rewindbutton").click();
         }
         else if (keycode == 110)
         {
             $("#newobjectbutton").click();
         }
-	else if (keycode == 100) {
-	    $("#trackobject" + tracks.currentptr.id + "delete").click();
-	}
+        else if (keycode == 104)
+        {
+            $("#annotateoptionshideboxes").click();
+        }
+        else 
+        {
+            var skip = 0;
+            if (keycode == 44 || keycode == 100)
+            {
+                skip = job.skip > 0 ? -job.skip : -10;
+            }
+            else if (keycode == 46 || keycode == 102)
+            {
+                skip = job.skip > 0 ? job.skip : 10;
+            }
+            else if (keycode == 62 || keycode == 118)
+            {
+                skip = job.skip > 0 ? job.skip : 1;
+            }
+            else if (keycode == 60 || keycode == 99)
+            {
+                skip = job.skip > 0 ? -job.skip : -1;
+            }
 
-        // if (keycode == 114)
-        // {
-        //     $("#rewindbutton").click();
-        // }
-        // else if (keycode == 110)
-        // {
-        //     $("#newobjectbutton").click();
-        // }
-        // else if (keycode == 104)
-        // {
-        //     $("#annotateoptionshideboxes").click();
-        // }
-        // else
-        // {
-        //     var skip = 0;
-        //     if (keycode == 44 || keycode == 100)
-        //     {
-        //         skip = job.skip > 0 ? -job.skip : -10;
-        //     }
-        //     else if (keycode == 46 || keycode == 102)
-        //     {
-        //         skip = job.skip > 0 ? job.skip : 10;
-        //     }
-        //     else if (keycode == 62 || keycode == 118)
-        //     {
-        //         skip = job.skip > 0 ? job.skip : 1;
-        //     }
-        //     else if (keycode == 60 || keycode == 99)
-        //     {
-        //         skip = job.skip > 0 ? -job.skip : -1;
-        //     }
+            if (skip != 0)
+            {
+                player.pause();
+                player.displace(skip);
 
-        //     if (skip != 0)
-        //     {
-        //         player.pause();
-        //         player.displace(skip);
-
-        //         ui_snaptokeyframe(job, player);
-        //     }
-        // }
+                ui_snaptokeyframe(job, player);
+            }
+        }
     });
 
 }
 
 function ui_canresize()
 {
-    return !$("#annotateoptionsresize").attr("checked");
+    return !$("#annotateoptionsresize").attr("checked"); 
 }
 
 function ui_areboxeshidden()
@@ -365,10 +334,8 @@ function ui_setupslider(player)
         min: player.job.start,
         max: player.job.stop,
         slide: function(event, ui) {
-	    // MA
-            //player.pause();
-            //player.seek(ui.value);
-
+            player.pause();
+            player.seek(ui.value);
             // probably too much bandwidth
             //eventlog("slider", "Seek to " + ui.value);
         }
@@ -381,7 +348,7 @@ function ui_setupslider(player)
 
     slider.css({
         marginTop: "6px",
-        width: parseInt(slider.parent().css("width")) - 200 + "px",
+        width: parseInt(slider.parent().css("width")) - 200 + "px", 
         float: "right"
     });
 
@@ -489,7 +456,7 @@ function ui_submit(job, tracks)
 
     /*if (mturk_isassigned() && !mturk_isoffline())
     {
-        if (!window.confirm("Are you sure you are ready to submit? Please " +
+        if (!window.confirm("Are you sure you are ready to submit? Please " + 
                             "make sure that the entire video is labeled and " +
                             "your annotations are tight.\n\nTo submit, " +
                             "press OK. Otherwise, press Cancel to keep " +
@@ -526,11 +493,11 @@ function ui_submit(job, tracks)
 
     function respawnjob(callback)
     {
-        // server_request("respawnjob", [job.jobid], function() {
-        //     callback();
-        // });
+        server_request("respawnjob", [job.jobid], function() {
+            callback();
+        });
     }
-
+    
     function savejob(callback)
     {
         server_post("savejob", [job.jobid],
@@ -593,7 +560,7 @@ function ui_submit_failedvalidation()
 
     h.append("<h1>Low Quality Work</h1>");
     h.append("<p>Sorry, but your work is low quality. We would normally <strong>reject this assignment</strong>, but we are giving you the opportunity to correct your mistakes since you are a new user.</p>");
-
+    
     h.append("<p>Please review the instructions, double check your annotations, and submit again. Remember:</p>");
 
     var str = "<ul>";
@@ -626,10 +593,8 @@ function ui_showinstructions(job)
 
     eventlog("instructions", "Popup instructions");
 
-    // MA: replaced "#container" with "#static_container"
-
-    $('<div id="turkic_overlay"></div>').appendTo("#static_container");
-    var h = $('<div id="instructionsdialog"></div>').appendTo("#static_container");
+    $('<div id="turkic_overlay"></div>').appendTo("#container");
+    var h = $('<div id="instructionsdialog"></div>').appendTo("#container");
 
     $('<div class="button" id="instructionsclosetop">Dismiss Instructions</div>').appendTo(h).button({
         icons: {

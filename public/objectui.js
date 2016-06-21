@@ -1,129 +1,3 @@
-// MA
-function ma_assert(cond, msg) {
-    if (cond) {
-	window.alert(msg);
-	console.log(msg);
-    }
-}
-
-function rect_int(r1, r2) {
-
-    if (r1[0] >= r2[2])
-	return 0;
-
-    if (r1[2] <= r2[0])
-	return 0;
-
-    if (r1[1] >= r2[3])
-	return 0;
-
-    if (r1[3] <= r2[1])
-	return 0;
-
-    var l = Math.max(r1[0], r2[0]);
-    var t = Math.max(r1[1], r2[1]);
-    var r = Math.min(r1[2], r2[2]);
-    var b = Math.min(r1[3], r2[3]);
-
-    return (r - l)*(b - t);
-}
-
-function rect_iou(r1, r2) {
-    ma_assert(r1[0] <= r1[2], "broken rectangle struct");
-    ma_assert(r1[1] <= r1[3], "broken rectangle struct");
-
-    ma_assert(r2[0] <= r2[2], "broken rectangle struct");
-    ma_assert(r2[1] <= r2[3], "broken rectangle struct");
-
-    var a1 = (r1[2] - r1[0])*(r1[3] - r1[1]);
-    var a2 = (r2[2] - r2[0])*(r2[3] - r2[1]);
-
-    var ia = rect_int(r1, r2)
-    return  ia / (a1 + a2 - ia);
-}
-
-function ui_update_bonus_display(num_objects, object_bonus_usd)
-{
-    if (object_bonus_usd > 0) {
-	current_bonus = object_bonus_usd * num_objects;
-        bonus_counter_html = "<p align='center'>Bonus for labeled objects:<br><font color='DarkOrange'>" + current_bonus.toFixed(3) + " USD</font></p>";
-	$("#bonus_counter").html(bonus_counter_html);
-    }
-}
-
-function count_bonus_objects(job, track_collection)
-{
-    var new_bonus_object_count = 0;
-
-    // don't pay bonus for new annotations smaller than minimal size
-    var min_box_width = job.min_box_width;
-
-    var new_pos = [];
-    var preloaded_pos = [];
-    var preloaded_matched = [];
-
-    // threshold to define when the new annotation is too similar -> no bonus
-    var iou_too_similar_threshold = 0.75;
-
-    // threshold to define when new and old annotations match
-    var iou_matched_threshold = 0.5;
-
-    for (var idx = 0; idx < track_collection.tracks.length; ++idx) {
-	if (!track_collection.tracks[idx].deleted) {
-	    var newidx = new_pos.length;
-	    var cur_pos = track_collection.tracks[idx].pollposition();
-	    new_pos[newidx] = [cur_pos.xtl, cur_pos.ytl, cur_pos.xbr, cur_pos.ybr];
-	}
-
-	if (track_collection.tracks[idx].preloaded_pos.length > 0) {
-	    var preidx = preloaded_pos.length;
-	    preloaded_pos[preidx] = track_collection.tracks[idx].preloaded_pos;
-	    preloaded_matched[preidx] = 0;
-	}
-    }
-    //console.log("new_pos.length: " + new_pos.length);
-
-    for (var idx = 0; idx < new_pos.length; ++idx) {
-	var cur_width = Math.abs(new_pos[idx][2] - new_pos[idx][0]);
-
-	var max_iou = 0;
-	var max_preidx = -1;
-	for (var preidx = 0; preidx < preloaded_pos.length; ++preidx) {
-	    if (preloaded_matched[preidx] == 1)
-		continue;
-
-	    var cur_iou = rect_iou(new_pos[idx], preloaded_pos[preidx]);
-
-	    if (cur_iou > max_iou) {
-		max_iou = cur_iou;
-		max_preidx = preidx;
-	    }
-	}
-
-	if (max_iou > iou_matched_threshold) {
-	    preloaded_matched[max_preidx] = 1;
-
-	    // matched, but sifficiently different -> pay bonus
-	    if (max_iou < iou_too_similar_threshold && cur_width > min_box_width)
-		++new_bonus_object_count;
-	}
-	else {
-	    // didn't match to preloaded -> pay bonus
-	    if (cur_width > min_box_width)
-		++new_bonus_object_count;
-	}
-    }
-
-    // pay bonus for deleted false positives -> preloaded annotation that didn't match any new one
-    for (var preidx = 0; preidx < preloaded_matched.length; ++preidx) {
-	if (preloaded_matched[preidx] == 0)
-	    ++new_bonus_object_count;
-    }
-
-    job.bonus_object_count = new_bonus_object_count;
-    return new_bonus_object_count;
-}
-
 function TrackObjectUI(button, container, videoframe, job, player, tracks)
 {
     var me = this;
@@ -186,7 +60,7 @@ function TrackObjectUI(button, container, videoframe, job, player, tracks)
         this.currentobject.onready.push(function() {
             me.stopnewobject();
         });
-
+        
         this.currentobject.initialize(this.counter, track, this.tracks);
         this.currentobject.stateclassify();
     }
@@ -213,16 +87,9 @@ function TrackObjectUI(button, container, videoframe, job, player, tracks)
         this.tracks.dim(false);
         this.currentobject.track.highlight(false);
 
-	// MA
-	var num_objects = me.objects.length;
-	f = function() {me.objects[num_objects-1].updateboxtext();}
-	this.currentobject.track.onupdate.push(f);
         this.button.button("option", "disabled", false);
-        this.counter++;
 
-	// MA
-	var new_bonus_object_count = count_bonus_objects(this.job, this.tracks);
-	ui_update_bonus_display(new_bonus_object_count, this.job.object_bonus_usd);
+        this.counter++;
     }
 
     this.injectnewobject = function(label, path, attributes)
@@ -280,72 +147,13 @@ function TrackObjectUI(button, container, videoframe, job, player, tracks)
             me.stopdrawing(position);
         });
 
-	      // MA
-        //var html = "<p>In this video, please track all of these objects:</p>";
-        //^original
-
-      	var html = "<div id='bonus_counter'><p align='center'>Bonus for labeled objects:<br><font color='DarkOrange'>0.00 USD</font></p></div>";
-
-        html += "<p align='center'>Keyboard shortcuts: <font color='blue'>'n'</font> - new vehicle, <font color='blue'>'t'</font> - toggle between partially and fully visible state, <font color='blue'>'d'</font> - delete vehicle.</p><br>";
-
-        //////THE FOLLOWING LETS YOU ADD RANDOM HINTS TO THE SIDE
-
-      	// var num_hints = 8;
-      	// var hintidx = Math.floor(Math.random()*num_hints);
-      	// var newhint = Math.floor(Math.random()*2);
-      	// if (newhint == 1) {
-      	//     hintidx = 9
-      	// }
-        //
-      	// if (hintidx == 0) {
-      	//     html += "<p align='center'><font color='green'>Hint</font>: label all vehicles with annotation rectangle wider than <strong>20 pixels</strong>. Width is indicated at the top of each annotation:</p><p align='center'><img width = '200px' src='label_cars_instructions/label_small_30px_missing2.png'/></p><p align='center'><img width = '200px' src='label_cars_instructions/label_small_30px_correct2.png'/></p>";
-      	// }
-      	// else if (hintidx == 1) {
-        //           html += "<p align='center'><font color='green'>Hint</font>: labeling boxes should tightly enclose the vehicle:<br><img width = '200px' src='label_cars_instructions/box_precise.png'/><img width = '200px' src='label_cars_instructions/box_loose.png'/></p>";
-      	// }
-      	// else if (hintidx == 2) {
-      	//     html += "<p align='center'><font color='green'>Hint</font>: labeling box for the partially visible vehicle should include the whole vehicle, not just the visible part:<br><img width = '200px' src='label_cars_instructions/occluded_all.png'/><img width = '200px' src='label_cars_instructions/occluded_visible_only.png'/></p>";
-      	// }
-      	// else if (hintidx == 3) {
-      	//     html += "<p align='center'><font color='green'>Hint</font>: you may skip barely visible vehicles at a distance, but you should label all other vehicles:<br><img width = '200px' src='label_cars_instructions/missed_none.png'/><img width = '200px' src='label_cars_instructions/missed_car.png'/></p>";
-      	// }
-      	// else if (hintidx == 4) {
-      	//     html += "<p align='center'><font color='green'>Hint</font>: label all types of vehicles including motorcycles, buses and trucks:<br><img width = '200px' src='label_cars_instructions/type6.jpeg'/><img width = '200px' src='label_cars_instructions/type1.jpeg'/></p>";
-      	// }
-      	// else if (hintidx == 5) {
-      	//     html += "<p align='center'><font color='green'>Hint</font>: When looking at cars from a side angle, label all cars, even if they are traveling in different directions. :<br><img width = '200px' src='label_cars_instructions/side_car1.jpeg'/><img width = '200px' src='label_cars_instructions/side_car2.jpeg'/></p>";
-      	// }
-      	// else if (hintidx == 6) {
-      	//     html += "<p align='center'><font color='green'>Hint</font>: When you are unsure about what should be labeled, please send an email with a screenshot of the image in question to amt@drive.ai. </p>";
-      	// }
-      	// // else if (hintidx == 7) {
-      	// //     html += "<p align='center'><font color='green'>Hint</font>: If you get an image with green boxes already in the image, then only label the missing cars without boxes. </p>";
-      	// // }
-      	// else if (hintidx == 7) {
-      	//     html += "<p align='center'><font color='green'>Hint</font>: Do not label the car that the camera is on. :<br><img width = '200px' src='label_cars_instructions/back_of_car.jpeg'/></p>";
-      	// }
-      	// // else if (hintidx == 7) {
-      	// //     html += "<p align='center'><font color='green'>Hint</font>: Label all cars you see within an image. Do not label a car if you can't see the majority of its hood or its rear tail lights. :<br><img width = '200px' src='label_cars_instructions/all_directions_hint1.jpeg'/><img width = '200px' src='label_cars_instructions/all_directions_hint2.jpeg'/></p>";
-      	// // }
-      	// else if (hintidx == 8) {
-      	//     html += "<p align='center'><font color='green'>Hint</font>: Only label cars in the opposite lane if they are obviously a car. :<br><img width = '300px' src='label_cars_instructions/dark_car.jpeg'/></p>";
-      	// }
-      	// // else if (hintidx == 8) {
-      	// //     html += "<p align='center'><font color='green'>Hint</font>: Do not label cars if you can only see the top of the roof, or if they blend in heavily with the background. :<br><img width = '200px' src='label_cars_instructions/dont_label_roof.jpeg'/></p>";
-      	// // }
-      	// else if (hintidx == 9) {
-      	//     html += "<p align='center'><font color='green'>Hint</font>: Label ALL vehicles in the image not masked out. Do not label masked out vehicles. :<br><img width = '300px' src='label_cars_instructions/masked_cars.jpeg'/></p>";
-      	// }
-
-
-        //html += "<p>In this image, please label all of these objects:</p>";
-
-        // html += "<ul>";
-        // for (var i in this.job.labels)
-        // {
-        //     html += "<li>" + this.job.labels[i] + "</li>";
-        // }
-        // html += "</ul>";
+        var html = "<p>In this video, please track all of these objects:</p>";
+        html += "<ul>";
+        for (var i in this.job.labels)
+        {
+            html += "<li>" + this.job.labels[i] + "</li>";
+        }
+        html += "</ul>";
 
         this.instructions = $(html).appendTo(this.container);
     }
@@ -470,18 +278,14 @@ function TrackObject(job, player, container, color)
     this.remove = function()
     {
         this.handle.slideUp(null, function() {
-            me.handle.remove();
+            me.handle.remove(); 
         });
         this.track.remove();
-
-	// MA
-	var new_bonus_object_count = count_bonus_objects(this.job, this.tracks);
-	ui_update_bonus_display(new_bonus_object_count, this.job.object_bonus_usd);
     }
 
     this.statedraw = function()
     {
-        var html = "<p>Draw a box around one of these objects:</p>";
+        var html = "<p>Draw a box around one of these objects:</p>"; 
 
         html += "<ul>";
         for (var i in this.job.labels)
@@ -501,7 +305,7 @@ function TrackObject(job, player, container, color)
     this.stateclassify = function()
     {
         this.drawinst.slideUp(null, function() {
-            me.drawinst.remove();
+            me.drawinst.remove(); 
         });
 
         var length = 0;
@@ -531,7 +335,7 @@ function TrackObject(job, player, container, color)
 
             $("input[name='classification" + this.id + "']").click(function() {
                 me.classifyinst.slideUp(null, function() {
-                    me.classifyinst.remove();
+                    me.classifyinst.remove(); 
                 });
 
                 for (var i in me.job.labels)
@@ -548,18 +352,14 @@ function TrackObject(job, player, container, color)
             });
         }
     }
-
+    
     this.finalize = function(labelid)
     {
-	//console.log("finalize: " + labelid);
-
         this.label = labelid;
         this.track.label = labelid;
 
         this.headerdetails = $("<div style='float:right;'></div>").appendTo(this.handle);
-
         this.header = $("<p class='trackobjectheader'><strong>" + this.job.labels[this.label] + " " + (this.id + 1) + "</strong></p>").appendTo(this.handle).hide().slideDown();
-
         //this.opencloseicon = $('<div class="ui-icon ui-icon-triangle-1-e"></div>').prependTo(this.header);
         this.details = $("<div class='trackobjectdetails'></div>").appendTo(this.handle).hide();
 
@@ -583,11 +383,7 @@ function TrackObject(job, player, container, color)
 
     this.updateboxtext = function()
     {
-	// MA
-        //var str = "<strong>" + this.job.labels[this.label] + " " + (this.id + 1) + "</strong>";
-	var pos = this.track.pollposition();
-	//var str = "<strong>id: " + (this.id + 1) + "<br>w: " + Math.round(pos.width) + "</strong>";
-	var str = "<strong>w: " + Math.round(pos.width) + "</strong>";
+        var str = "<strong>" + this.job.labels[this.label] + " " + (this.id + 1) + "</strong>";
 
         var count = 0;
         for (var i in this.job.attributes[this.track.label])
@@ -606,19 +402,12 @@ function TrackObject(job, player, container, color)
         {
             $(".boundingboxtext").hide();
         }
-
-	// MA: update bonus if width changed
-	var new_bonus_object_count = count_bonus_objects(this.job, this.tracks);
-	ui_update_bonus_display(new_bonus_object_count, this.job.object_bonus_usd);
     }
 
     this.setupdetails = function()
     {
-	// MA
-        //this.details.append("<input type='checkbox' id='trackobject" + this.id + "lost'> <label for='trackobject" + this.id + "lost'>Outside of view frame</label><br>");
-
-	// MA: not showing the visible/hidden checkbox for now
-        this.details.append("<div style='display:none'><input type='checkbox' id='trackobject" + this.id + "occluded'> <label for='trackobject" + this.id + "occluded'>Occluded or truncated</label><br></div>");
+        this.details.append("<input type='checkbox' id='trackobject" + this.id + "lost'> <label for='trackobject" + this.id + "lost'>Outside of view frame</label><br>");
+        this.details.append("<input type='checkbox' id='trackobject" + this.id + "occluded'> <label for='trackobject" + this.id + "occluded'>Occluded or obstructed</label><br>");
 
         for (var i in this.job.attributes[this.track.label])
         {
@@ -636,7 +425,7 @@ function TrackObject(job, player, container, color)
 
                     me.updateboxtext();
 
-                    if (checked)
+                    if (checked) 
                     {
                         eventlog("markattribute", "Mark object as " + me.job.attributes[me.track.label][attributeid]);
                     }
@@ -653,7 +442,7 @@ function TrackObject(job, player, container, color)
         $("#trackobject" + this.id + "lost").click(function() {
             me.player.pause();
 
-            var outside = $(this).attr("checked");
+            var outside = $(this).is(":checked");
             me.track.setoutside(outside);
             me.track.notifyupdate();
 
@@ -666,27 +455,21 @@ function TrackObject(job, player, container, color)
                 eventlog("markoutside", "Mark object inside");
             }
         });
-
-	// MA
         $("#trackobject" + this.id + "occluded").click(function() {
-	    console.log("occluded click handler");
+            me.player.pause();
 
-            // me.player.pause();
+            var occlusion = $(this).is(":checked");
+            me.track.setocclusion(occlusion);
+            me.track.notifyupdate();
 
-            var occlusion = $(this).attr("checked");
-	    console.log("click handler, occlusion: " + occlusion);
-
-            // me.track.setocclusion(occlusion);
-            // me.track.notifyupdate();
-
-            // if (occlusion)
-            // {
-            //     eventlog("markocclusion", "Mark object as occluded");
-            // }
-            // else
-            // {
-            //     eventlog("markocclusion", "Mark object as not occluded");
-            // }
+            if (occlusion)
+            {
+                eventlog("markocclusion", "Mark object as occluded");
+            }
+            else
+            {
+                eventlog("markocclusion", "Mark object as not occluded");
+            }
         });
 
         this.player.onupdate.push(function() {
@@ -699,10 +482,7 @@ function TrackObject(job, player, container, color)
         this.headerdetails.append("<div style='float:right;'><div class='ui-icon ui-icon-image' id='trackobject" + this.id + "tooltip' title='Show preview of track'></div></div>");
 
         $("#trackobject" + this.id + "delete").click(function() {
-	    // MA
-            //if (window.confirm("Delete the " + me.job.labels[me.label] + " " + (me.id + 1) + " track? If the object just left the view screen, click the \"Outside of view frame\" check box instead."))
-
-	    if (window.confirm("Delete the " + me.job.labels[me.label] + " " + (me.id + 1) + "?"))
+            if (window.confirm("Delete the " + me.job.labels[me.label] + " " + (me.id + 1) + " track? If the object just left the view screen, click the \"Outside of view frame\" check box instead."))
             {
                 me.remove();
                 eventlog("removeobject", "Deleted an object");
@@ -725,7 +505,7 @@ function TrackObject(job, player, container, color)
         $("#trackobject" + this.id + "tooltip").click(function() {
             me.toggletooltip(false);
         }).mouseout(function() {
-            me.hidetooltip();
+            me.hidetooltip(); 
         });
     }
 
@@ -808,7 +588,7 @@ function TrackObject(job, player, container, color)
                 y = cpos.top + cheight - 215;
             }
         }
-
+        
         var numannotations = 0;
         var frames = [];
         for (var i in this.track.journal.annotations)
@@ -923,7 +703,7 @@ function TrackObject(job, player, container, color)
         if (this.tooltip != null)
         {
             this.tooltip.slideUp(250, function() {
-                $(this).remove();
+                $(this).remove(); 
             });
             this.tooltip = null;
             window.clearInterval(this.tooltiptimer);
@@ -994,11 +774,6 @@ function TrackObject(job, player, container, color)
 
     this.highlight = function()
     {
-	// MA
-	//console.log("highlight: " + this.id);
-	this.tracks.currentid = this.id;
-	this.tracks.currentptr = me;
-
         this.handle.css({
             'border-color': me.color[0],
             'background-color': me.color[1],
