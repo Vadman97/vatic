@@ -27,17 +27,17 @@ function ui_setup(job)
 {
     var screen = $("<div id='annotatescreen'></div>").appendTo(container);
 
-    $("<table>" + 
+    $("<table>" +
         "<tr>" +
             "<td><div id='instructionsbutton' class='button'>Instructions</div><div id='instructions'>Annotate every object, even stationary and obstructed objects, for the entire video.</td>" +
             "<td><div id='topbar'></div></td>" +
         "</tr>" +
         "<tr>" +
-              "<td><div id='videoframe'></div></td>" + 
+              "<td><div id='videoframe'></div></td>" +
               "<td rowspan='2'><div id='sidebar'></div></td>" +
-          "</tr>" + 
+          "</tr>" +
           "<tr>" +
-              "<td><div id='bottombar'></div></td>" + 
+              "<td><div id='bottombar'></div></td>" +
           "</tr>" +
           "<tr>" +
               "<td><div id='advancedoptions'></div></td>" +
@@ -46,7 +46,7 @@ function ui_setup(job)
       "</table>").appendTo(screen).css("width", "100%");
 
 
-    var playerwidth = Math.max(720, job.width);
+    var playerwidth = Math.max(1000, job.width);
 
 
     $("#videoframe").css({"width": job.width + "px",
@@ -119,7 +119,7 @@ function ui_setupbuttons(job, player, tracks)
 {
     $("#instructionsbutton").click(function() {
         player.pause();
-        ui_showinstructions(job); 
+        ui_showinstructions(job);
     }).button({
         icons: {
             primary: "ui-icon-newwin"
@@ -266,7 +266,7 @@ function ui_setupkeyboardshortcuts(job, player)
 
         var keycode = e.keyCode ? e.keyCode : e.which;
         eventlog("keyboard", "Key press: " + keycode);
-        
+
         if (keycode == 32 || keycode == 112 || keycode == 116 || keycode == 98)
         {
             $("#playbutton").click();
@@ -283,7 +283,7 @@ function ui_setupkeyboardshortcuts(job, player)
         {
             $("#annotateoptionshideboxes").click();
         }
-        else 
+        else
         {
             var skip = 0;
             if (keycode == 44 || keycode == 100)
@@ -317,7 +317,7 @@ function ui_setupkeyboardshortcuts(job, player)
 
 function ui_canresize()
 {
-    return !$("#annotateoptionsresize").attr("checked"); 
+    return !$("#annotateoptionsresize").attr("checked");
 }
 
 function ui_areboxeshidden()
@@ -348,7 +348,7 @@ function ui_setupslider(player)
 
     slider.css({
         marginTop: "6px",
-        width: parseInt(slider.parent().css("width")) - 200 + "px", 
+        width: parseInt(slider.parent().css("width")) - 200 + "px",
         float: "right"
     });
 
@@ -456,7 +456,7 @@ function ui_submit(job, tracks)
 
     /*if (mturk_isassigned() && !mturk_isoffline())
     {
-        if (!window.confirm("Are you sure you are ready to submit? Please " + 
+        if (!window.confirm("Are you sure you are ready to submit? Please " +
                             "make sure that the entire video is labeled and " +
                             "your annotations are tight.\n\nTo submit, " +
                             "press OK. Otherwise, press Cancel to keep " +
@@ -497,7 +497,7 @@ function ui_submit(job, tracks)
             callback();
         });
     }
-    
+
     function savejob(callback)
     {
         server_post("savejob", [job.jobid],
@@ -560,7 +560,7 @@ function ui_submit_failedvalidation()
 
     h.append("<h1>Low Quality Work</h1>");
     h.append("<p>Sorry, but your work is low quality. We would normally <strong>reject this assignment</strong>, but we are giving you the opportunity to correct your mistakes since you are a new user.</p>");
-    
+
     h.append("<p>Please review the instructions, double check your annotations, and submit again. Remember:</p>");
 
     var str = "<ul>";
