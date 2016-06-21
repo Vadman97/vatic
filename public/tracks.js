@@ -106,6 +106,10 @@ function BoxDrawer(container)
                 "height": (pos.height - 3)+ "px",
                 "border-color": this.color
             });
+	    
+	    // MA
+	    var t = this.handle.children(".boundingboxtext");
+            t.html("<strong>w: " + Math.round(pos.width) + "</strong>").show();	    
         }
     }
 
@@ -155,8 +159,17 @@ function BoxDrawer(container)
             this.starty = yc;
 
             this.drawing = true;
+	    /* MA - show width while drawing */
+            //this.handle = $('<div class="boundingbox"><div>');
+            //this.handle = $('<div class="boundingbox"><div class="boundingboxtext_boxwidth"></div></div>');
+            this.handle = $('<div class="boundingbox"><div class="boundingboxtext"></div></div>');
 
-            this.handle = $('<div class="boundingbox"><div>');
+            this.handle.children(".boundingboxtext").show().css({
+                "border-color": "white",
+                "color": "white",
+		"margin-top": -20,
+                });
+
             this.updatedrawing(xc, yc);
             this.container.append(this.handle);
 
@@ -260,8 +273,10 @@ function TrackCollection(player, job)
     this.player = player;
     this.job = job;
     this.tracks = [];
-
     this.onnewobject = []; 
+
+    this.currentid = -1;
+    this.currentptr = 0;
 
     player.onupdate.push(function() {
         me.update(player.frame);
@@ -287,7 +302,7 @@ function TrackCollection(player, job)
         var track = new Track(this.player, color, position);
         this.tracks.push(track);
 
-        console.log("Added new track");
+        console.log("Added new track, frame: " + frame);
 
         for (var i = 0; i < this.onnewobject.length; i++)
         {
@@ -440,6 +455,9 @@ function Track(player, color, position)
     this.locked = false;
     this.drawingnew = false;
 
+    // MA: position preloaded at startup, compare to this position to figure out if change is enough for bonus, used in count_bonus_objects()
+    this.preloaded_pos = [];
+
     this.journal.mark(this.player.job.start,
         new Position(position.xtl, position.ytl,
                      position.xbr, position.ybr, 
@@ -455,7 +473,7 @@ function Track(player, color, position)
      */
     this.pollposition = function()
     {
-        var hidden = this.handle.css("display") == "none";
+        var hidden = this.handle.is(":hidden'");
         this.handle.show();
 
         var pos = this.handle.position();
@@ -597,6 +615,10 @@ function Track(player, color, position)
         }
 
         var pos = this.estimate(this.player.frame);
+
+	console.log(this.player.frame);
+	console.log(pos);
+
         if (pos == null)
         {
             pos = this.pollposition();
@@ -663,11 +685,6 @@ function Track(player, color, position)
      */
     this.setlock = function(value)
     {
-        if (this.deleted)
-        {
-            return;
-        }
-
         this.locked = value;
 
         if (value)
@@ -707,12 +724,12 @@ function Track(player, color, position)
             this.handle.children(".boundingboxtext").hide().css({
                 "border-color": this.color,
                 //"color": this.color
+		//"margin-top": -20,
                 });
 
             this.handle.resizable({
                 handles: "n,w,s,e",
                 autoHide: true,
-                ghost: true, /* need to fix this bug soon */
                 start: function() {
                     player.pause();
                     me.notifystartupdate();
@@ -748,6 +765,7 @@ function Track(player, color, position)
                 },
                 cancel: ".boundingboxtext"
             });
+
 
             this.handle.mouseover(function() {
                 if (!me.locked && !me.drawingnew)
@@ -819,11 +837,6 @@ function Track(player, color, position)
 
     this.draggable = function(value)
     {
-        if (this.deleted)
-        {
-            return;
-        }
-
         this.candrag = value;
 
         if (value && !this.locked && !this.drawingnew)
@@ -838,11 +851,6 @@ function Track(player, color, position)
 
     this.resizable = function(value)
     {
-        if (this.deleted)
-        {
-            return;
-        }
-
         this.canresize = value;
 
         if (value && !this.locked &&!this.drawingnew)
@@ -1137,8 +1145,8 @@ function Position(xtl, ytl, xbr, ybr, occluded, outside)
     this.ytl = ytl;
     this.xbr = xbr;
     this.ybr = ybr;
-    this.occluded = occluded ? true : false;
-    this.outside = outside ? true : false;
+    this.occluded = occluded ? occluded : false;
+    this.outside = outside ? outside : false;
     this.width = xbr - xtl;
     this.height = ybr - ytl;
 
@@ -1151,6 +1159,7 @@ function Position(xtl, ytl, xbr, ybr, occluded, outside)
     {
         this.ybr = this.ytl + 1;
     }
+
     this.serialize = function()
     {
         return "[" + this.xtl + "," +

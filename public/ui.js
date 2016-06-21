@@ -12,7 +12,7 @@ function ui_build(job)
     ui_setupslider(player);
     ui_setupsubmit(job, tracks);
     ui_setupclickskip(job, player, tracks, objectui);
-    ui_setupkeyboardshortcuts(job, player);
+    ui_setupkeyboardshortcuts(job, player, tracks);
     ui_loadprevious(job, objectui);
 
     $("#newobjectbutton").click(function() {
@@ -58,8 +58,9 @@ function ui_setup(job)
                        "width": "205px"});
 
     $("#annotatescreen").css("width", (playerwidth + 205) + "px");
-
+    
     $("#bottombar").append("<div id='playerslider'></div>");
+
     $("#bottombar").append("<div class='button' id='rewindbutton'>Rewind</div> ");
     $("#bottombar").append("<div class='button' id='playbutton'>Play</div> ");
 
@@ -212,7 +213,7 @@ function ui_setupbuttons(job, player, tracks)
     });
 
     $("#annotateoptionsresize").button().click(function() {
-        var resizable = $(this).attr("checked") ? false : true;
+        var resizable = !$(this).attr("checked")
         tracks.resizable(resizable);
 
         if (resizable)
@@ -251,12 +252,16 @@ function ui_setupbuttons(job, player, tracks)
             $(".boundingboxtext").hide();
         }
     });
+
+    // MA
+    $("#playbutton").button("option", "disabled", true);
+
 }
 
-function ui_setupkeyboardshortcuts(job, player)
+function ui_setupkeyboardshortcuts(job, player, tracks)
 {
     $(window).keypress(function(e) {
-        console.log("Key press: " + e.keyCode);
+        //console.log("Key press: " + e.keyCode);
 
         if (ui_disabled)
         {
@@ -266,51 +271,77 @@ function ui_setupkeyboardshortcuts(job, player)
 
         var keycode = e.keyCode ? e.keyCode : e.which;
         eventlog("keyboard", "Key press: " + keycode);
+	console.log("Key press: " + keycode);
         
-        if (keycode == 32 || keycode == 112 || keycode == 116 || keycode == 98)
+        //if (keycode == 32 || keycode == 112 || keycode == 116 || keycode == 98)
+	if (keycode == 116)
         {
-            $("#playbutton").click();
-        }
-        if (keycode == 114)
-        {
-            $("#rewindbutton").click();
+	    // MA
+            //$("#playbutton").click();
+
+	    // MA: skip labeling occlusion/truncation
+	    if (false) {
+	    //if (tracks.currentid > -1) {		
+		var cur_checkbox_state = $("#trackobject" + tracks.currentptr.id + "occluded").attr("checked");
+		// console.log("begin: current state: " + cur_checkbox_state);
+
+		document.getElementById("trackobject" + tracks.currentptr.id + "occluded").checked = !cur_checkbox_state;
+		tracks.currentptr.track.setocclusion(!cur_checkbox_state);
+		tracks.currentptr.track.notifyupdate();
+
+		// cur_checkbox_state = $("#trackobject" + tracks.currentid + "occluded").attr("checked");
+		// console.log("end: current state: " + cur_checkbox_state);
+	    }
+	    
         }
         else if (keycode == 110)
         {
             $("#newobjectbutton").click();
         }
-        else if (keycode == 104)
-        {
-            $("#annotateoptionshideboxes").click();
-        }
-        else 
-        {
-            var skip = 0;
-            if (keycode == 44 || keycode == 100)
-            {
-                skip = job.skip > 0 ? -job.skip : -10;
-            }
-            else if (keycode == 46 || keycode == 102)
-            {
-                skip = job.skip > 0 ? job.skip : 10;
-            }
-            else if (keycode == 62 || keycode == 118)
-            {
-                skip = job.skip > 0 ? job.skip : 1;
-            }
-            else if (keycode == 60 || keycode == 99)
-            {
-                skip = job.skip > 0 ? -job.skip : -1;
-            }
+	else if (keycode == 100) {
+	    $("#trackobject" + tracks.currentptr.id + "delete").click();
+	}
 
-            if (skip != 0)
-            {
-                player.pause();
-                player.displace(skip);
+        // if (keycode == 114)
+        // {
+        //     $("#rewindbutton").click();
+        // }
+        // else if (keycode == 110)
+        // {
+        //     $("#newobjectbutton").click();
+        // }
+        // else if (keycode == 104)
+        // {
+        //     $("#annotateoptionshideboxes").click();
+        // }
+        // else 
+        // {
+        //     var skip = 0;
+        //     if (keycode == 44 || keycode == 100)
+        //     {
+        //         skip = job.skip > 0 ? -job.skip : -10;
+        //     }
+        //     else if (keycode == 46 || keycode == 102)
+        //     {
+        //         skip = job.skip > 0 ? job.skip : 10;
+        //     }
+        //     else if (keycode == 62 || keycode == 118)
+        //     {
+        //         skip = job.skip > 0 ? job.skip : 1;
+        //     }
+        //     else if (keycode == 60 || keycode == 99)
+        //     {
+        //         skip = job.skip > 0 ? -job.skip : -1;
+        //     }
 
-                ui_snaptokeyframe(job, player);
-            }
-        }
+        //     if (skip != 0)
+        //     {
+        //         player.pause();
+        //         player.displace(skip);
+
+        //         ui_snaptokeyframe(job, player);
+        //     }
+        // }
     });
 
 }
@@ -334,8 +365,10 @@ function ui_setupslider(player)
         min: player.job.start,
         max: player.job.stop,
         slide: function(event, ui) {
-            player.pause();
-            player.seek(ui.value);
+	    // MA
+            //player.pause();
+            //player.seek(ui.value);
+
             // probably too much bandwidth
             //eventlog("slider", "Seek to " + ui.value);
         }
@@ -418,17 +451,17 @@ function ui_loadprevious(job, objectui)
     var overlay = $('<div id="turkic_overlay"></div>').appendTo("#container");
     var note = $("<div id='submitdialog'>One moment...</div>").appendTo("#container");
 
-    server_request("getboxesforjob", [job.jobid], function(data) {
-        overlay.remove();
-        note.remove();
+    // server_request("getboxesforjob", [job.jobid], function(data) {
+    //     overlay.remove();
+    //     note.remove();
 
-        for (var i in data)
-        {
-            objectui.injectnewobject(data[i]["label"],
-                                     data[i]["boxes"],
-                                     data[i]["attributes"]);
-        }
-    });
+    //     for (var i in data)
+    //     {
+    //         objectui.injectnewobject(data[i]["label"],
+    //                                  data[i]["boxes"],
+    //                                  data[i]["attributes"]);
+    //     }
+    // });
 }
 
 function ui_setupsubmit(job, tracks)
@@ -493,9 +526,9 @@ function ui_submit(job, tracks)
 
     function respawnjob(callback)
     {
-        server_request("respawnjob", [job.jobid], function() {
-            callback();
-        });
+        // server_request("respawnjob", [job.jobid], function() {
+        //     callback();
+        // });
     }
     
     function savejob(callback)
@@ -593,8 +626,10 @@ function ui_showinstructions(job)
 
     eventlog("instructions", "Popup instructions");
 
-    $('<div id="turkic_overlay"></div>').appendTo("#container");
-    var h = $('<div id="instructionsdialog"></div>').appendTo("#container");
+    // MA: replaced "#container" with "#static_container"
+
+    $('<div id="turkic_overlay"></div>').appendTo("#static_container");
+    var h = $('<div id="instructionsdialog"></div>').appendTo("#static_container");
 
     $('<div class="button" id="instructionsclosetop">Dismiss Instructions</div>').appendTo(h).button({
         icons: {
@@ -602,7 +637,10 @@ function ui_showinstructions(job)
         }
     }).click(ui_closeinstructions);
 
-    instructions(job, h)
+    // MA 
+    //instructions(job, h)
+
+    instructions_label_cars(job, h)
 
     ui_disable();
 }
